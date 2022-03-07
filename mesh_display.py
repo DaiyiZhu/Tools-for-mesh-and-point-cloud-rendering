@@ -166,6 +166,11 @@ class VtkPointCloudCanvas(QWidget):
         self.txt_2 = vtk.vtkTextActor()
         self.txt_3 = vtk.vtkTextActor()
         self.txt_4 = vtk.vtkTextActor()
+        self.key_leftTop = vtk.vtkTextActor()
+        self.key_leftBottom = vtk.vtkTextActor()
+        self.key_rightTop = vtk.vtkTextActor()
+        self.key_rightBottom = vtk.vtkTextActor()
+
         self._vtk_widget = QVTKRenderWindowInteractor(self)
         self.grid.addWidget(self._vtk_widget, 0, 0)
         # self.move(1000, 1000)
@@ -194,7 +199,7 @@ class VtkPointCloudCanvas(QWidget):
 
         ## add button 
         # csv_path = r"C:\Users\71011\Downloads\pos_key.csv"
-        csv_path = "../pos_key.csv"
+        csv_path = "/Users/daiyi.zhu/project/vtk_show/mesh_display/pos_key.csv"
         # csv_path = ''
         self.drawTSNE(csv_path)
 
@@ -242,15 +247,15 @@ class VtkPointCloudCanvas(QWidget):
         self._iren_mesh.Initialize()
         self._iren_mesh_base.Initialize()
 
-    def addBtn(self, path, label, x, y, w, h):
+    def addBtn(self, path, label, key ,x, y, w, h):
         btn1 = QDoublePushButton(label, path, self)
         print(label)
         btn1.setStyleSheet("background-color:rgb({},{},{})".format(self.color[label][0]*255, self.color[label][1]*255, self.color[label][2]*255))
         btn1.setGeometry(x,y,w,h)
     
         label_map = {0:5, 1:0, 2:2, 3:4, 4:3, 5:1}
-        btn1.clicked.connect(lambda: self.drawPointCloud(path, label_map[label]))
-        btn1.doubleClicked.connect(lambda: self.drawPointCloud_base(path, label_map[label]))
+        btn1.clicked.connect(lambda: self.drawPointCloud(path, label_map[label], key))
+        btn1.doubleClicked.connect(lambda: self.drawPointCloud_base(path, label_map[label], key))
 
         point_id = path.split('/')[-1].split('.')[0].split('_')[1] + '.obj'
         
@@ -267,9 +272,9 @@ class VtkPointCloudCanvas(QWidget):
             self.prevBtnBase.setStyleSheet("background-color:rgb({},{},{})".format(self.color[labels][0]*255, self.color[labels][1]*255, self.color[labels][2]*255))
         object.setStyleSheet("background-color:rgb({},{},{})".format(r*255, g*255, b*255))
 
-    def drawPointCloud(self, file, label):
+    def drawPointCloud(self, file, label, key):
         point_id = file.split('/')[-1].split('.')[0].split('_')[1] + '.obj'
-        mesh_path = "/Users/zhudaiyi/project/mesh_display/mesh_lod_2_new/mesh_" + point_id
+        mesh_path = "/Users/daiyi.zhu/project/vtk_show/mesh_display/mesh_lod_2_new/mesh_" + point_id
 
         self._point_cloud.clearPoints()
         bu = self.sender()
@@ -284,12 +289,22 @@ class VtkPointCloudCanvas(QWidget):
                 point = [float(i) for i in strpoint]
                 self._point_cloud.addPoint(point)
             f.close()
+            corr = self._vtk_widget.GetRenderWindow().GetSize()
+
+            self.key_leftTop.SetInput(str(key))
+            txtprop = self.key_leftTop.GetTextProperty()
+            txtprop.SetFontFamilyToArial()
+            txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
+            txtprop.SetColor(1, 1, 0)
+            self.key_leftTop.SetDisplayPosition(0, 0)
+            self._render.AddActor(self.key_leftTop)
+
             self.txt_1.SetInput(str(label))
             txtprop = self.txt_1.GetTextProperty()
             txtprop.SetFontFamilyToArial()
             txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
             txtprop.SetColor(0, 1, 0)
-            corr = self._vtk_widget.GetRenderWindow().GetSize()
+            
             self.txt_1.SetDisplayPosition(int(corr[0] * 0.8), int(corr[1] * 0.8))
             # self.txt.SetDisplayPosition(int(100 / 1440 * self.screenwidth) , int(100 / 900 * self.screenheight))
             self._render.AddActor(self.txt_1)
@@ -298,25 +313,36 @@ class VtkPointCloudCanvas(QWidget):
         else:
             pass
         if os.path.exists(mesh_path):
+          renderer, actor = vis_mesh(mesh_path)
+          
+          self.key_rightTop.SetInput(str(key))
+          txtprop = self.key_rightTop.GetTextProperty()
+          txtprop.SetFontFamilyToArial()
+          txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
+          txtprop.SetColor(1, 1, 0)
+          self.key_rightTop.SetDisplayPosition(0, 0)
+          renderer.AddActor(self.key_rightTop)
 
-            renderer, actor = vis_mesh(mesh_path)
-            self.txt_3.SetInput(str(label))
-            txtprop = self.txt_3.GetTextProperty()
-            txtprop.SetFontFamilyToArial()
-            # txtprop.SetFontSize(60)
-            txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
-            txtprop.SetColor(0, 1, 0)
-            corr = self._vtk_widget.GetRenderWindow().GetSize()
-            self.txt_3.SetDisplayPosition(int(corr[0] * 0.8), int(corr[1] * 0.8))
 
-            self._vtk_widget_mesh.GetRenderWindow().AddRenderer(renderer)
-            renderer.AddActor(actor)
-            renderer.AddActor(self.txt_3)
-            self._vtk_widget_mesh.GetRenderWindow().Render()
-            self._vtk_widget_mesh.Start()
+          self.txt_3.SetInput(str(label))
+          txtprop = self.txt_3.GetTextProperty()
+          txtprop.SetFontFamilyToArial()
+          # txtprop.SetFontSize(60)
+          txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
+          txtprop.SetColor(0, 1, 0)
+          corr = self._vtk_widget.GetRenderWindow().GetSize()
 
+          self.txt_3.SetDisplayPosition(int(corr[0] * 0.8), int(corr[1] * 0.8))
+
+          self._vtk_widget_mesh.GetRenderWindow().AddRenderer(renderer)
+          renderer.AddActor(actor)
+          renderer.AddActor(self.txt_3)
+          self._vtk_widget_mesh.GetRenderWindow().Render()
+          self._vtk_widget_mesh.Start()
     
-    def drawPointCloud_base(self, file, label):
+    def drawPointCloud_base(self, file, label, key):
+        point_id = file.split('/')[-1].split('.')[0].split('_')[1] + '.obj'
+        mesh_path = "/Users/daiyi.zhu/project/vtk_show/mesh_display/mesh_lod_2_new/mesh_" + point_id
         self._point_cloud_base.clearPoints()
         bu = self.sender()
         if isinstance(bu, QPushButton):
@@ -330,6 +356,17 @@ class VtkPointCloudCanvas(QWidget):
                 point = [float(i) for i in strpoint]
                 self._point_cloud_base.addPoint(point)
             f.close()
+
+            self.key_leftBottom.SetInput(str(key))
+            txtprop = self.key_leftBottom.GetTextProperty()
+            txtprop.SetFontFamilyToArial()
+            txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
+            txtprop.SetColor(1, 1, 0)
+            self.key_leftBottom.SetDisplayPosition(0, 0)
+            self._render_base.AddActor(self.key_leftBottom)
+
+
+
             self.txt_2.SetInput(str(label))
             txtprop = self.txt_2.GetTextProperty()
             txtprop.SetFontFamilyToArial()
@@ -344,13 +381,20 @@ class VtkPointCloudCanvas(QWidget):
             self._vtk_widget_base.GetRenderWindow().Render()
         else:
             pass
-        point_id = file.split('/')[-1].split('.')[0].split('_')[1] + '.obj'
-        mesh_path = "/Users/daiyi.zhu/project/vtk_show/mesh_display/mesh_lod_2_new/mesh_" + point_id
         if os.path.exists(mesh_path):
 
             reader = vtkOBJReader()
 
             renderer, actor = vis_mesh(mesh_path)
+            self.key_rightBottom.SetInput(str(key))
+            txtprop = self.key_rightBottom.GetTextProperty()
+            txtprop.SetFontFamilyToArial()
+            txtprop.SetFontSize(int(30 / 1440 * self.screenwidth))
+            txtprop.SetColor(1, 1, 0)
+            self.key_rightBottom.SetDisplayPosition(0, 0)
+            renderer.AddActor(self.key_rightBottom)
+
+
 
             self.txt_4.SetInput(str(label))
             txtprop = self.txt_4.GetTextProperty()
@@ -393,7 +437,7 @@ class VtkPointCloudCanvas(QWidget):
             # path = r"E:\google_segmeation\all_data_128nm_point_txt\cluster3\cluster3_{}.txt".format(key)
             
             path = "/Users/daiyi.zhu/project/vtk_show/mesh_display/point_cloud_data_256nm/all_data_256nm_point_txt/cluster3/cluster3_{}.txt".format(key)
-            self.addBtn(path, labels, x * 400 / 900 * self.screenheight, y * 650 / 1440 * self.screenwidth, 10, 10)
+            self.addBtn(path, labels, key, x * 400 / 900 * self.screenheight, y * 650 / 1440 * self.screenwidth, 10, 10)
 
 if __name__ == '__main__':
     
