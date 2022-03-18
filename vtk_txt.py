@@ -3,6 +3,7 @@ from glob import glob
 import os 
 from pathlib import Path
 import vtk
+
 from vtkmodules.vtkIOGeometry import (
     vtkBYUReader,
     vtkOBJReader,
@@ -88,7 +89,7 @@ class VtkPointCloud:
 # cnt = 0
 
 
-with open('./all-test-split.txt', 'r') as f:
+with open('./all-test.txt', 'r') as f:
   point_cloud_paths = f.readlines()
 
 parser = argparse.ArgumentParser()
@@ -97,17 +98,28 @@ parser.add_argument("--num_type", type=str, default="100", help="")
 args = parser.parse_args()
 # print(opt)
 
+
 cnt = 0
+num_id = [13, 14, 18, 19, 21, 36, 45, 65, 69, \
+          72, 85, 105, 119, 215, 261, 287, 334, 340, 341, 376]
+num_id = [x - 1 for x in num_id]
+# idx = 0
+# print(num_id)
 for point_cloud_path in point_cloud_paths:
+  if cnt not in num_id:
+    print(cnt)
+    cnt += 1
+    continue
   vtk_point_cloud = VtkPointCloud(flag='g')
-  point_cloud_path = '/Users/zhudaiyi/project/mesh_display/point_cloud_data_256nm/all_data_256nm_point_txt/' + point_cloud_path.strip('\n') + '.txt'
+  point_cloud_path = '/Users/daiyi.zhu/project/vtk_show/mesh_display/point_cloud_data_256nm/all_data_256nm_point_txt/' + point_cloud_path.strip('\n') + '.txt'
   with open(point_cloud_path, 'r') as f:
     point_clouds = f.readlines()
   for point_cloud in point_clouds:
     point_str = point_cloud.strip('\n').split(',')
     point = [float(i) for i in point_str]
     vtk_point_cloud.addPoint(point)
-
+  # cnt = num_id[idx]
+  # cnt = idx
   file_name_graph = './debug/debug_num' + str(args.num_type) + '/' + str(cnt) + '_sphere.obj'
   reader_graph = vtkOBJReader()
   reader_graph.SetFileName(file_name_graph)
@@ -155,8 +167,8 @@ for point_cloud_path in point_cloud_paths:
   renderer = vtkRenderer()
   renderWindow = vtkRenderWindow()
   screenwidth,  screenheight =  renderWindow.GetScreenSize()
-#   renderWindow.SetSize(2560, 1440)
-  renderWindow.SetSize(screenwidth, screenheight)
+  renderWindow.SetSize(2000, 1000)
+  # renderWindow.SetSize(screenwidth, screenheight)
   renderWindow.AddRenderer(renderer)
   renderWindow.AddRenderer(renderer_graph)
   renderWindow.AddRenderer(renderer_sphere)
